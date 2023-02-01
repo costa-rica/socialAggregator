@@ -58,7 +58,7 @@ def get_data_from_goodreads():
     ##############################################################
     #TODO: check shelves for read/ want to read/ soemthing else
     ##############################################################
-    goodreads_scraped_books_path = os.path.join(config.PROJ_DB_PATH,'goodreads-data','books')
+    goodreads_scraped_books_path = os.path.join(config.PROJ_DB_PATH,'books')
     book_dict = {}
     books_list_for_df = []
     counter = 1
@@ -114,7 +114,7 @@ def add_new_goodreads_to_db(df_to_add):
 
 
 def goodreads_update():
-
+    logger_goodreads.info(f"--- inspected by nick jan31 ---")
     # call_goodreads_scraper()
     # Popen(['goodreads-user-scraper', '--user_id', '149832357'])
     df_new = get_data_from_goodreads()

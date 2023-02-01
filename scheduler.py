@@ -6,7 +6,7 @@ import os
 from sa_config import ConfigLocal, ConfigDev, ConfigProd
 import logging
 from logging.handlers import RotatingFileHandler
-# import pandas as pd
+import pandas as pd
 from twitter import twitter_scheduler_update
 from stack_overflow import stackoverflow_scheduler_update
 from github import github_scheduler_update
@@ -15,6 +15,7 @@ import subprocess
 import time
 from data_service import get_social_activity_for_df
 from sa_models import SocialPosts, sess, engine
+
 
 
 if os.environ.get('CONFIG_TYPE')=='local':
@@ -58,7 +59,7 @@ def scheduler_funct():
     #job_call_get_locations = scheduler.add_job(get_locations, 'cron', day='*', hour='23', minute='01', second='05')#Production
     #job_call_get_locations = scheduler.add_job(get_locations, 'cron', hour='*', minute='07', second='05')#Testing
     #job_call_harmless = scheduler.add_job(harmless, 'cron',  hour='*', minute='19', second='25')#Testing
-    job_collect_socials = scheduler.add_job(collect_socials,'cron', hour='*', minute='04', second='39')#Testing
+    job_collect_socials = scheduler.add_job(social_agg_process,'cron', hour='*', minute='16', second='49')#Testing
     # job_collect_socials = scheduler.add_job(collect_socials,'cron', day='*', hour='06', minute='01', second='05')#Production
 
     scheduler.start()
@@ -70,7 +71,7 @@ def scheduler_funct():
 def social_agg_process():
     logger_init.info(f"--- Start social_agg_process ---")
     collect_socials()
-    collect_goodreads()
+    # collect_goodreads()
     logger_init.info(f"- finishe processing soicals at {datetime.today().strftime('%Y-%m-%d %H:%M')}-")
     sending_to_dest()
     logger_init.info(f"--- Scheduler Complete ---")
@@ -131,7 +132,12 @@ def sending_to_dest():
     new_dict = get_social_activity_for_df()
     headers = {'password':config.DESTINATION_PASSWORD,'Content-Type': 'application/json'}
     payload = {'new_activity':new_dict}
+
     response = requests.request("POST", config.API_URL, headers=headers, data=str(json.dumps(payload)))
+    
+    # send to endpoint tester to verify what was sent
+    if os.environ.get('CONFIG_TYPE')=='prod':
+        response = requests.request("POST", config.API_ENDPOINT_TESTER, headers=headers, data=str(json.dumps(payload)))
 
     logger_init.info(f"- Sent updated social data to destination. Status code: {response.status_code} -")
     
